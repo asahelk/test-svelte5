@@ -1,0 +1,5 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"hello_world": "Hello, {name} from ko!",
+	"this_is_country": "여기는 대한민국입니다."
+}
