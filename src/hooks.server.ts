@@ -1,8 +1,8 @@
 import type { Handle } from "@sveltejs/kit";
 import { paraglideMiddleware } from "$lib/paraglide/server";
 
-const handleParaglide: Handle = ({ event, resolve }) =>
-	paraglideMiddleware(event.request, ({ request, locale }) => {
+const handleParaglide: Handle = ({ event, resolve }) => {
+	return paraglideMiddleware(event.request, ({ request, locale }) => {
 		if (
 			event.url.pathname.startsWith(
 				"/.well-known/appspecific/com.chrome.devtools",
@@ -18,5 +18,7 @@ const handleParaglide: Handle = ({ event, resolve }) =>
 				html.replace("%paraglide.lang%", locale),
 		});
 	});
+}
+
 
 export const handle: Handle = handleParaglide;

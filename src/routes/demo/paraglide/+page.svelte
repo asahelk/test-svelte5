@@ -20,7 +20,7 @@
 	<button onclick={() => setLocale('de-ch')}>de-ch</button>
 	<button onclick={() => setLocale('pt-br')}>pt-br</button>
 	<button onclick={() => setLocale('pt-pt')}>pt-pt</button>
-	<button class="rounded" onclick={() => setLocale('hi-in')}>hi-in</button>
+	<button onclick={() => setLocale('hi-in')}>hi-in</button>
 </div>
 <p>
 	If you use VSCode, install the <a
