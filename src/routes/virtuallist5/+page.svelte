@@ -3,6 +3,7 @@
 	import type VirtualListType from './VirtualList5.svelte';
 	import VirtualList from './VirtualList5.svelte';
 	import { overrideItemIdKeyNameBeforeInitialisingDndZones } from 'svelte-dnd-action';
+	import { mergeArrayObjectsByKeyWithMap } from '$lib/utils/utils';
 	// import { array } from './states.svelte.ts';
 
 	overrideItemIdKeyNameBeforeInitialisingDndZones('index');
@@ -13,14 +14,18 @@
 		virtualList?.getVirtualItems().map((e, i) => {
 			if (virtualList === undefined) return e;
 			const { start = 0 } = virtualList.getVisibleRange();
+			console.log('start + i');
 			return {
-				order: start + i,
 				...e,
+				order: start + i,
+				style: `${start + i === indexGrabbed ? 'visibility: hidden !important;' : ''}`,
 			};
 		}) ?? [],
 	);
 
-	let items = $state(Array.from({ length: 7 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}` })));
+	let indexGrabbed = $state(-1);
+
+	let items = $state(Array.from({ length: 17 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}` })));
 	type DnDItem = (typeof virtualListItems)[number];
 
 	let itemSize = 50;
@@ -34,6 +39,8 @@
 		} = e.detail;
 
 		console.log(`consider event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(partialDndItems));
+
+		indexGrabbed = +elementIndex;
 		if (virtualList === undefined) return;
 
 		const { start = 0, stop } = virtualList.getVisibleRange();
@@ -44,7 +51,7 @@
 
 		const dndNoDuplicates = partialDndItems.filter((e) => {
 			if (indices2.has(e.index)) {
-				return false;
+				return false; // remove it
 			}
 			indices2.add(e.index);
 			return true;
@@ -52,20 +59,32 @@
 
 		console.log('dndNoDuplicates', $state.snapshot(dndNoDuplicates));
 
+		const { array: dndNoDuplicates2, repeatedKeys } = mergeArrayObjectsByKeyWithMap(partialDndItems, 'index');
+
+		console.log('dndNoDuplicates2', $state.snapshot(dndNoDuplicates));
+		console.log('repeatedKeys', $state.snapshot(repeatedKeys));
+
+		const newDndItems = dndNoDuplicates2.map((e, i) => {
+			return {
+				...e,
+				order: start + i,
+				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`, //visibility: hidden;
+			};
+		});
 		const indices = new Set();
-		const newDndItems = partialDndItems
-			.map((e, i) => {
-				if (indices.has(e.index)) {
-					return false;
-				}
-				indices.add(e.index);
-				return {
-					...e,
-					order: start + i,
-					style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
-				};
-			})
-			.filter((e) => e);
+		// const newDndItems = partialDndItems
+		// 	.map((e, i) => {
+		// 		if (indices.has(e.index)) {
+		// 			return false;
+		// 		}
+		// 		indices.add(e.index);
+		// 		return {
+		// 			...e,
+		// 			order: start + i,
+		// 			style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
+		// 		};
+		// 	})
+		// 	.filter((e) => e);
 
 		console.log('getVirtualItems()', $state.snapshot(virtualList?.getVirtualItems()));
 		console.log('virtualListItems', $state.snapshot(virtualListItems));
@@ -92,6 +111,7 @@
 		} = e.detail;
 		console.log(`finalize event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(partialDndItems));
 
+		indexGrabbed = -1;
 		if (virtualList === undefined) return;
 		const { offset } = virtualList.getState();
 		const { start = 0, stop } = virtualList.getVisibleRange();
@@ -179,9 +199,9 @@
 			getKey={(index) => items[index]?.id}
 		>
 			{#snippet theItem(style: string, index: number, key: number)}
-				<div class="w-full" style="width: 100%;">
+				<div class="w-full" style="width: 100%;{virtualListItems[index]?.style}">
 					{items[index]?.name}
-					-{index}
+					-{index}--
 				</div>
 			{/snippet}
 
@@ -219,7 +239,7 @@
 		/* height: 600px; */
 	}
 	div {
-		width: 50%;
+		width: 70%;
 		padding: 0.2em;
 		border: 1px solid blue;
 		margin: 0.15em 0;
