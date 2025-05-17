@@ -12,8 +12,7 @@
 	let virtualListItems = $derived(
 		virtualList?.getVirtualItems().map((e, i) => {
 			if (virtualList === undefined) return e;
-			const { offset } = virtualList.getState();
-			const { start = 0, stop } = virtualList.getVisibleRange();
+			const { start = 0 } = virtualList.getVisibleRange();
 			return {
 				order: start + i,
 				...e,
@@ -21,7 +20,7 @@
 		}) ?? [],
 	);
 
-	let items = $state(Array.from({ length: 8 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}` })));
+	let items = $state(Array.from({ length: 7 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}` })));
 	type DnDItem = (typeof virtualListItems)[number];
 
 	let itemSize = 50;
@@ -41,21 +40,40 @@
 
 		console.log({ start, stop });
 
-		const newDndItems = partialDndItems.map((e, i) => {
-			return {
-				...e,
-				order: start + i,
-				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
-			};
+		const indices2 = new Set();
+
+		const dndNoDuplicates = partialDndItems.filter((e) => {
+			if (indices2.has(e.index)) {
+				return false;
+			}
+			indices2.add(e.index);
+			return true;
 		});
 
-		// console.log("getVirtualItems()",$state.snapshot(virtualList?.getVirtualItems()))
-		// console.log("virtualListItems",$state.snapshot(virtualListItems))
-		// console.log("partialDndItems",$state.snapshot(partialDndItems))
-		// console.log("newDndItems",$state.snapshot(newDndItems))
+		console.log('dndNoDuplicates', $state.snapshot(dndNoDuplicates));
 
-		const oldPosition = +elementIndex;
-		const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order;
+		const indices = new Set();
+		const newDndItems = partialDndItems
+			.map((e, i) => {
+				if (indices.has(e.index)) {
+					return false;
+				}
+				indices.add(e.index);
+				return {
+					...e,
+					order: start + i,
+					style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
+				};
+			})
+			.filter((e) => e);
+
+		console.log('getVirtualItems()', $state.snapshot(virtualList?.getVirtualItems()));
+		console.log('virtualListItems', $state.snapshot(virtualListItems));
+		console.log('partialDndItems', $state.snapshot(partialDndItems));
+		console.log('newDndItems', $state.snapshot(newDndItems));
+
+		// const oldPosition = +elementIndex;
+		// const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order;
 
 		// const elementToMove = items.splice(oldPosition, 1)[0];
 		// items = items.toSpliced(auxNewPosition, 0, elementToMove);
@@ -179,11 +197,11 @@
 		</VirtualList>
 	</div>
 	<button class="cursor-pointer bg-neutral-500 p-2" onclick={testClick}> Test </button>
-	<section class="grid grid-cols-2">
-		<pre class="bg-black! text-white!" style="font-size:0.775rem">
+	<section class="grid grid-cols-5">
+		<pre class="col-span-2 bg-black! text-white!" style="font-size:0.775rem">
 			{JSON.stringify(items, null, 2)}
 		</pre>
-		<pre class="bg-black! text-white!" style="font-size:0.775rem">
+		<pre class="col-span-3 bg-black! text-white!" style="font-size:0.775rem">
 			{JSON.stringify(virtualListItems, null, 2)}
 		</pre>
 	</section>
