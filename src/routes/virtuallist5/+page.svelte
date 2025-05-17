@@ -45,46 +45,15 @@
 
 		const { start = 0, stop } = virtualList.getVisibleRange();
 
-		console.log({ start, stop });
+		const { array: dndNoDuplicates } = mergeArrayObjectsByKeyWithMap(partialDndItems, 'index');
 
-		const indices2 = new Set();
-
-		const dndNoDuplicates = partialDndItems.filter((e) => {
-			if (indices2.has(e.index)) {
-				return false; // remove it
-			}
-			indices2.add(e.index);
-			return true;
-		});
-
-		console.log('dndNoDuplicates', $state.snapshot(dndNoDuplicates));
-
-		const { array: dndNoDuplicates2, repeatedKeys } = mergeArrayObjectsByKeyWithMap(partialDndItems, 'index');
-
-		console.log('dndNoDuplicates2', $state.snapshot(dndNoDuplicates));
-		console.log('repeatedKeys', $state.snapshot(repeatedKeys));
-
-		const newDndItems = dndNoDuplicates2.map((e, i) => {
+		const newDndItems = dndNoDuplicates.map((e, i) => {
 			return {
 				...e,
 				order: start + i,
 				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`, //visibility: hidden;
 			};
 		});
-		const indices = new Set();
-		// const newDndItems = partialDndItems
-		// 	.map((e, i) => {
-		// 		if (indices.has(e.index)) {
-		// 			return false;
-		// 		}
-		// 		indices.add(e.index);
-		// 		return {
-		// 			...e,
-		// 			order: start + i,
-		// 			style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
-		// 		};
-		// 	})
-		// 	.filter((e) => e);
 
 		console.log('getVirtualItems()', $state.snapshot(virtualList?.getVirtualItems()));
 		console.log('virtualListItems', $state.snapshot(virtualListItems));
