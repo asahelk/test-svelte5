@@ -37,7 +37,6 @@
 		console.log(`consider event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(partialDndItems));
 		if (virtualList === undefined) return;
 
-		const { offset } = virtualList.getState();
 		const { start = 0, stop } = virtualList.getVisibleRange();
 
 		console.log({ start, stop });
@@ -55,9 +54,16 @@
 		// console.log("partialDndItems",$state.snapshot(partialDndItems))
 		// console.log("newDndItems",$state.snapshot(newDndItems))
 
-		// virtualList.setVirtualItems([...newDndItems])
+		const oldPosition = +elementIndex;
+		const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order;
+
+		// const elementToMove = items.splice(oldPosition, 1)[0];
+		// items = items.toSpliced(auxNewPosition, 0, elementToMove);
+		// const newElements = items.toSpliced(oldPosition, 1);
+		// console.log('newElements', $state.snapshot(newElements));
 		virtualList.setVirtualItems([...newDndItems]);
-		// partialDndItems[2].order = 9
+		// virtualList.recomputeSizes(start);
+
 		console.log('\n\n');
 	}
 
@@ -89,14 +95,14 @@
 
 		const oldPosition = +elementIndex;
 		const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order;
-		const newPosition = newDndItems[auxNewPosition - 1]?.order ?? 0;
+		// const newPosition = newDndItems[auxNewPosition - 1]?.order ?? 0;
 		// console.log("oldPosition",oldPosition)
 		// console.log("auxNewPosition",auxNewPosition)
 		// console.log("newPosition",newPosition)
 
-		const elementToMove = items.splice(oldPosition, 1)[0];
-
 		// console.log("items bef",$state.snapshot(items))
+
+		const elementToMove = items.splice(oldPosition, 1)[0];
 		items = items.toSpliced(auxNewPosition, 0, elementToMove);
 		virtualList.setVirtualItems(newDndItems);
 		virtualList.recomputeSizes(start);
@@ -105,6 +111,8 @@
 	}
 
 	function testClick() {
+		// virtualList?.recomputeSizes(0);
+		console.log('items', $state.snapshot(items));
 		if (virtualList === undefined) return;
 
 		const { offset } = virtualList.getState();
@@ -122,7 +130,7 @@
 </script>
 
 <section class="flex flex-col">
-	{items.length}
+	{items.length}-{virtualListItems?.length}
 	<div>
 		<VirtualList
 			bind:this={virtualList}
@@ -150,12 +158,12 @@
 			onconsider={handleSortConsider}
 			onfinalize={handleSortFinalize}
 			wrapperRestProps={{ onscroll }}
-			getKey={(index) => index}
+			getKey={(index) => items[index]?.id}
 		>
 			{#snippet theItem(style: string, index: number, key: number)}
 				<div class="w-full" style="width: 100%;">
 					{items[index]?.name}
-					-{index}-{key}
+					-{index}
 				</div>
 			{/snippet}
 
@@ -171,6 +179,14 @@
 		</VirtualList>
 	</div>
 	<button class="cursor-pointer bg-neutral-500 p-2" onclick={testClick}> Test </button>
+	<section class="grid grid-cols-2">
+		<pre class="bg-black! text-white!">
+			{JSON.stringify(items, null, 2)}
+		</pre>
+		<pre class="bg-black! text-white!">
+			{JSON.stringify(virtualListItems, null, 2)}
+		</pre>
+	</section>
 </section>
 
 <style>
