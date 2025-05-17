@@ -14,7 +14,6 @@
 		virtualList?.getVirtualItems().map((e, i) => {
 			if (virtualList === undefined) return e;
 			const { start = 0 } = virtualList.getVisibleRange();
-			console.log('start + i');
 			return {
 				...e,
 				order: start + i,
