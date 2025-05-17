@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { dndzone, type DndEvent } from 'svelte-dnd-action';
-	import type VirtualListType from './VirtualList.svelte';
-	import VirtualList from './VirtualList.svelte';
+	import type VirtualListType from './VirtualList5.svelte';
+	import VirtualList from './VirtualList5.svelte';
 	import { overrideItemIdKeyNameBeforeInitialisingDndZones } from 'svelte-dnd-action';
 	// import { array } from './states.svelte.ts';
 
