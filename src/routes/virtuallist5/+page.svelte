@@ -21,7 +21,7 @@
 		}) ?? [],
 	);
 
-	let items = $state(Array.from({ length: 34 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}` })));
+	let items = $state(Array.from({ length: 8 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}` })));
 	type DnDItem = (typeof virtualListItems)[number];
 
 	let itemSize = 50;
@@ -84,7 +84,7 @@
 			return {
 				...e,
 				order: start + i,
-				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
+				// style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
 			};
 		});
 
@@ -180,10 +180,10 @@
 	</div>
 	<button class="cursor-pointer bg-neutral-500 p-2" onclick={testClick}> Test </button>
 	<section class="grid grid-cols-2">
-		<pre class="bg-black! text-white!">
+		<pre class="bg-black! text-white!" style="font-size:0.775rem">
 			{JSON.stringify(items, null, 2)}
 		</pre>
-		<pre class="bg-black! text-white!">
+		<pre class="bg-black! text-white!" style="font-size:0.775rem">
 			{JSON.stringify(virtualListItems, null, 2)}
 		</pre>
 	</section>
