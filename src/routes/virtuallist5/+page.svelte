@@ -7,6 +7,7 @@
 		Array.from({ length: 34 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}` }))
 	);
 
+	let itemSize = 50;
 	// let items = $state([...array.value])
 
 	function handleSortConsider(e) {
@@ -29,7 +30,7 @@
 			return {
 				...e,
 				order: start + i,
-				style: `left:0;width:100%;height:32px;position:absolute;top:${(start + i) * 32}px;'`
+				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`
 			};
 		});
 
@@ -63,7 +64,7 @@
 			return {
 				...e,
 				order: start + i,
-				style: `left:0;width:100%;height:32px;position:absolute;top:${(start + i) * 32}px;'`
+				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`
 			};
 		});
 
@@ -120,9 +121,9 @@
 	// let virtualListItems = $derived(virtualList?.getVirtualItems() ?? [])
 </script>
 
-<section class="items-center">
+<section class="flex flex-col items-end">
 	{items.length}
-	<div class="flex justify-end">
+	<div>
 		<VirtualList
 			bind:this={virtualList}
 			use={[
@@ -141,10 +142,10 @@
 					}
 				]
 			]}
-			width={400}
+			width="100%"
 			height={300}
 			itemCount={items.length}
-			itemSize={32}
+			{itemSize}
 			overscanCount={0}
 			onconsider={handleSortConsider}
 			onfinalize={handleSortFinalize}
@@ -152,11 +153,15 @@
 			getKey={(index) => index}
 		>
 			{#snippet theItem(style, index, key, item)}
-				<div>
+				<div class="w-full" style="width: 100%;">
 					{items[index]?.name}
 					-{index}-{item.xx}-{key}
 				</div>
 			{/snippet}
+
+			<!-- <div slot="item" let:index let:style {style}>
+				Letter: {items[index]}, Row: #{index}
+			</div> -->
 
 			<!-- getKey={(index) => items[index].id} -->
 
