@@ -152,10 +152,10 @@
 			wrapperRestProps={{ onscroll }}
 			getKey={(index) => index}
 		>
-			{#snippet theItem(style, index, key, item)}
+			{#snippet theItem(style: string, index: number, key: number)}
 				<div class="w-full" style="width: 100%;">
 					{items[index]?.name}
-					-{index}-{item.xx}-{key}
+					-{index}-{key}
 				</div>
 			{/snippet}
 

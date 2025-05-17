@@ -13,7 +13,7 @@
 				get() {
 					result = { passive: true };
 					return true;
-				}
+				},
 			});
 
 			window.addEventListener('testpassive', arg, arg);
@@ -42,8 +42,7 @@
 	export let stickyIndices: number[] | null | undefined = null;
 	export let getKey: ((index: number) => any) | null | undefined = null;
 
-	export let scrollDirection: typeof DIRECTION.VERTICAL | typeof DIRECTION.HORIZONTAL =
-		DIRECTION.VERTICAL;
+	export let scrollDirection: typeof DIRECTION.VERTICAL | typeof DIRECTION.HORIZONTAL = DIRECTION.VERTICAL;
 	export let scrollOffset: number | null | undefined = null;
 	export let scrollToIndex: number | null | undefined = null;
 	export let scrollToAlignment: string | null | undefined = null;
@@ -53,14 +52,14 @@
 	export let use: ActionArray | undefined = [];
 	export let header: Snippet;
 	export let footer: Snippet;
-	export let theItem: Snippet<[style: string, index: number]>;
+	export let theItem: Snippet<[style: string, index: number, key: number]>;
 
 	const dispatchEvent = createEventDispatcher();
 
 	const sizeAndPositionManager = new SizeAndPositionManager({
 		itemCount,
 		itemSize,
-		estimatedItemSize: getEstimatedItemSize()
+		estimatedItemSize: getEstimatedItemSize(),
 	});
 
 	let mounted = false;
@@ -69,15 +68,10 @@
 
 	let _state: {
 		offset: number | null | undefined;
-		scrollChangeReason:
-			| typeof SCROLL_CHANGE_REASON.REQUESTED
-			| typeof SCROLL_CHANGE_REASON.OBSERVED;
+		scrollChangeReason: typeof SCROLL_CHANGE_REASON.REQUESTED | typeof SCROLL_CHANGE_REASON.OBSERVED;
 	} = {
-		offset:
-			scrollOffset ||
-			(scrollToIndex != null && items.length && getOffsetForIndex(scrollToIndex)) ||
-			0,
-		scrollChangeReason: SCROLL_CHANGE_REASON.REQUESTED
+		offset: scrollOffset || (scrollToIndex != null && items.length && getOffsetForIndex(scrollToIndex)) || 0,
+		scrollChangeReason: SCROLL_CHANGE_REASON.REQUESTED,
 	};
 
 	let prevState = _state;
@@ -87,7 +81,7 @@
 		scrollOffset,
 		itemCount,
 		itemSize,
-		estimatedItemSize
+		estimatedItemSize,
 	};
 
 	let styleCache: Record<string, string> = {};
@@ -136,19 +130,14 @@
 	function propsUpdated() {
 		if (!mounted) return;
 
-		const scrollPropsHaveChanged =
-			prevProps.scrollToIndex !== scrollToIndex ||
-			prevProps.scrollToAlignment !== scrollToAlignment;
-		const itemPropsHaveChanged =
-			prevProps.itemCount !== itemCount ||
-			prevProps.itemSize !== itemSize ||
-			prevProps.estimatedItemSize !== estimatedItemSize;
+		const scrollPropsHaveChanged = prevProps.scrollToIndex !== scrollToIndex || prevProps.scrollToAlignment !== scrollToAlignment;
+		const itemPropsHaveChanged = prevProps.itemCount !== itemCount || prevProps.itemSize !== itemSize || prevProps.estimatedItemSize !== estimatedItemSize;
 
 		if (itemPropsHaveChanged) {
 			sizeAndPositionManager.updateConfig({
 				itemSize,
 				itemCount,
-				estimatedItemSize: getEstimatedItemSize()
+				estimatedItemSize: getEstimatedItemSize(),
 			});
 
 			recomputeSizes();
@@ -157,16 +146,13 @@
 		if (prevProps.scrollOffset !== scrollOffset) {
 			_state = {
 				offset: scrollOffset || 0,
-				scrollChangeReason: SCROLL_CHANGE_REASON.REQUESTED
+				scrollChangeReason: SCROLL_CHANGE_REASON.REQUESTED,
 			};
-		} else if (
-			typeof scrollToIndex === 'number' &&
-			(scrollPropsHaveChanged || itemPropsHaveChanged)
-		) {
+		} else if (typeof scrollToIndex === 'number' && (scrollPropsHaveChanged || itemPropsHaveChanged)) {
 			_state = {
 				offset: getOffsetForIndex(scrollToIndex, scrollToAlignment, itemCount),
 
-				scrollChangeReason: SCROLL_CHANGE_REASON.REQUESTED
+				scrollChangeReason: SCROLL_CHANGE_REASON.REQUESTED,
 			};
 		}
 
@@ -176,7 +162,7 @@
 			scrollOffset,
 			itemCount,
 			itemSize,
-			estimatedItemSize
+			estimatedItemSize,
 		};
 	}
 
@@ -219,7 +205,7 @@
 				const index = stickyIndices[i];
 				updatedItems.push({
 					index,
-					style: getStyle(index, true)
+					style: getStyle(index, true),
 				});
 			}
 		}
@@ -227,7 +213,7 @@
 		const { start, stop } = sizeAndPositionManager.getVisibleRange({
 			containerSize: scrollDirection === DIRECTION.VERTICAL ? height : width,
 			offset,
-			overscanCount
+			overscanCount,
 		});
 
 		if (start !== undefined && stop !== undefined) {
@@ -240,13 +226,13 @@
 				if (size)
 					updatedItems.push({
 						index,
-						style: getStyle(index, false)
+						style: getStyle(index, false),
 					});
 			}
 
 			dispatchEvent('itemsUpdated', {
 				start,
-				end: stop
+				end: stop,
 			});
 		}
 
@@ -257,7 +243,7 @@
 		if ('scroll' in wrapper) {
 			wrapper.scroll({
 				[SCROLL_PROP[scrollDirection]]: value,
-				behavior: scrollToBehaviour
+				behavior: scrollToBehaviour,
 			});
 		} else {
 			wrapper[SCROLL_PROP_LEGACY[scrollDirection]] = value;
@@ -279,7 +265,7 @@
 			align,
 			containerSize: scrollDirection === DIRECTION.VERTICAL ? height : width,
 			currentOffset: _state.offset || 0,
-			targetIndex: index
+			targetIndex: index,
 		});
 	}
 
@@ -290,12 +276,12 @@
 
 		_state = {
 			offset,
-			scrollChangeReason: SCROLL_CHANGE_REASON.OBSERVED
+			scrollChangeReason: SCROLL_CHANGE_REASON.OBSERVED,
 		};
 
 		dispatchEvent('afterScroll', {
 			offset,
-			event
+			event,
 		});
 	}
 
@@ -346,7 +332,7 @@
 		return sizeAndPositionManager.getVisibleRange({
 			containerSize: scrollDirection === DIRECTION.VERTICAL ? height : width,
 			offset,
-			overscanCount
+			overscanCount,
 		});
 	}
 
@@ -369,7 +355,7 @@
 	<div class="virtual-list-inner" style={innerStyle} use:useActions={use} {...$$restProps}>
 		{#each items as item (getKey ? getKey(item.index) : item.index)}
 			<div animate:flip={{ duration: 200 }} style={item.style}>
-				{@render theItem?.(item.style, item.index, getKey?.(item.index), item)}
+				{@render theItem?.(item.style, item.index, getKey?.(item.index))}
 			</div>
 			<!-- <slot name="item" style={item.style} index={item.index} /> -->
 		{/each}
