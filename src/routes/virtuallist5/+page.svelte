@@ -18,6 +18,7 @@
 				...e,
 				order: start + i,
 				style: `${start + i === indexGrabbed ? 'visibility: hidden !important;' : ''}`,
+				// style: '',
 			};
 		}) ?? [],
 	);
@@ -50,10 +51,11 @@
 			return {
 				...e,
 				order: start + i,
-				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`, //visibility: hidden;
+				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
 			};
 		});
 
+		console.log('dndNoDuplicates', $state.snapshot(dndNoDuplicates));
 		console.log('getVirtualItems()', $state.snapshot(virtualList?.getVirtualItems()));
 		console.log('virtualListItems', $state.snapshot(virtualListItems));
 		console.log('partialDndItems', $state.snapshot(partialDndItems));
@@ -98,6 +100,8 @@
 		// console.log("virtualListItems",$state.snapshot(virtualListItems))
 		// console.log("partialDndItems",$state.snapshot(partialDndItems))
 		// console.log("newDndItems",$state.snapshot(newDndItems))
+
+		//TODO: Fix when dropping the item is sliding one position up
 
 		const oldPosition = +elementIndex;
 		const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order;
@@ -165,6 +169,7 @@
 			onfinalize={handleSortFinalize}
 			wrapperRestProps={{ onscroll }}
 			getKey={(index) => items[index]?.id}
+			class="inner-container"
 		>
 			{#snippet theItem(style: string, index: number, key: number)}
 				<div class="w-full" style="width: 100%;{virtualListItems[index]?.style}">
@@ -211,5 +216,10 @@
 		padding: 0.2em;
 		border: 1px solid blue;
 		margin: 0.15em 0;
+	}
+
+	:global(.inner-container) {
+		margin: 24px 0;
+		/* margin-bottom: 2rem; */
 	}
 </style>
