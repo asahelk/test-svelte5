@@ -33,6 +33,7 @@
     import { useActions, type ActionArray } from '../virtuallist5/useActions';
     import type { Item, Options } from 'svelte-dnd-action';
     import { DIRECTION, SCROLL_CHANGE_REASON, SCROLL_PROP, SCROLL_PROP_LEGACY } from '../virtuallist5/constants';
+    import { flip } from 'svelte/animate';
 
     export let height: number | string;
     export let width: number | string | undefined = '100%';
@@ -354,7 +355,10 @@
     <div class="virtual-list-inner" style={innerStyle} use:useActions={use} {...$$restProps}>
         {#each items as item (getKey ? getKey(item.index) : item.index)}
             <!-- <slot name="item" style={item.style} index={item.index} /> -->
-            {@render theItem?.(item.style, item.index, getKey?.(item.index))}
+            <!-- {@render theItem?.(item.style, item.index, getKey?.(item.index))} -->
+            <div animate:flip={{ duration: 200 }} style={item.style}>
+                {@render theItem?.(item.style, item.index, getKey?.(item.index))}
+            </div>
         {/each}
     </div>
 

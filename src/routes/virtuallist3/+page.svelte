@@ -1,12 +1,11 @@
 <script lang="ts">
-    import { dndzone } from 'svelte-dnd-action';
+    import { dndzone, TRIGGERS } from 'svelte-dnd-action';
     import type VirtualListType from './VirtualList3.svelte';
     import VirtualList from './VirtualList3.svelte';
     import { array } from '../virtuallist5/states.svelte';
     import type { DndEvent } from 'svelte-dnd-action';
 
-    // let items = $state(Array.from({length: 13}, (_, i) =>
-    // 	({id:crypto.randomUUID(), name:`xitem ${i+1}`})))
+    // let items = $state(Array.from({ length: 33 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i + 1}` })));
 
     let virtualList = $state<ReturnType<typeof VirtualListType>>();
 
@@ -18,13 +17,17 @@
     type DnDItem = (typeof items)[number];
 
     let count = 0;
-    function handleSortConsider(e: CustomEvent<DndEvent<DnDItem>>) {
+    let wrongElementTakenIndex = -1;
+    let originalElementIndex = -1;
+    let originalElementId = '';
+
+    function handleSortConsider(event: CustomEvent<DndEvent<DnDItem>>) {
         // console.log("event", JSON.stringify(e.detail,null, 2))
         const {
             items: dndItems,
-            info: { id: elementIndex, trigger },
-        } = e.detail;
-        console.log(`consider event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(dndItems));
+            info: { id: elementId, trigger },
+        } = event.detail;
+        console.log(`consider event => ${trigger.toUpperCase()} - ${elementId}`, $state.snapshot(dndItems));
 
         if (virtualList === undefined) return;
 
@@ -78,6 +81,8 @@
             // dndItems[5] = {...temp};
         }
 
+        console.log('start', start);
+        console.log('stop', stop);
         const partialDndItems = dndItems.slice(start, stop + 1).map((e, i) => {
             return {
                 ...e,
@@ -86,16 +91,72 @@
             };
         });
 
-        console.log('partialDndItems', $state.snapshot(partialDndItems));
-        // console.log("dndItems",JSON.stringify(dndItems,null, 2))
-        console.log('dndItems', $state.snapshot(dndItems));
+        wrongElementTakenIndex = dndItems.findIndex((e) => e.id === 'id:dnd-shadow-placeholder-0000');
+        // const wrongElementTaken = items[wrongElementTakenIndex];
+        originalElementIndex = wrongElementTakenIndex + start;
+        originalElementId = originalElementId ? originalElementId : items[originalElementIndex].id;
 
-        virtualList?.setVirtualItems(partialDndItems);
-        items = dndItems;
+        console.log('originalElementId', $state.snapshot(originalElementId));
+        console.log('originalElementIndex', $state.snapshot(originalElementIndex));
+        console.log('wrongElementTakenIndex', $state.snapshot(wrongElementTakenIndex));
+        if (originalElementIndex !== -1) {
+            const wrongElementExistsInDndItems = dndItems.findIndex((e) => e.id === elementId);
+            if (wrongElementExistsInDndItems !== -1) {
+                dndItems.splice(wrongElementExistsInDndItems, 1);
+                dndItems.splice(originalElementIndex, 0, items[originalElementIndex]);
+            }
+        }
+
+        // if (originalElementIndex === -1) return;
+
+        const dndItemsMapped = dndItems.map((e, i) => {
+            if (start !== 0 && wrongElementTakenIndex !== -1 && (trigger === TRIGGERS.DRAG_STARTED || trigger === TRIGGERS.DRAGGED_ENTERED)) {
+                console.log('INSIDE!!', wrongElementTakenIndex);
+                if (i === wrongElementTakenIndex) {
+                    return { ...items[wrongElementTakenIndex], index: i, test: 'wrong' };
+                }
+                if (i === originalElementIndex) {
+                    event.detail.info = { ...event.detail.info, id: e.id };
+                    return { ...items[originalElementIndex], id: 'id:dnd-shadow-placeholder-0000', isDndShadowItem: true, index: i, test: 'orig' };
+                }
+            }
+
+            return {
+                ...e,
+                index: i,
+            };
+        });
+
+        // console.log('partialDndItems', $state.snapshot(partialDndItems));
+        // console.log("dndItems",JSON.stringify(dndItems,null, 2))
+        console.log('items', $state.snapshot(items));
+        console.log('dndItemsMapped', $state.snapshot(dndItemsMapped));
+        // virtualList?.setVirtualItems(partialDndItems);
+        // virtualList.recomputeSizes(start);
+        items = dndItemsMapped;
+
         console.log('\n\n');
     }
 
-    function handleSortFinalize(e: CustomEvent<DndEvent<DnDItem>>) {}
+    // NOT WORKING, THE DND LIBRARY MANIPULATE ITS OWN LIST OF ITEMS EVEN WHEN SPECIFIC INDEX IS BEING CHANGED THE DND LIBRARY IS UPDATING ITS OWN LIST OF ITEMS ON CALLBACKS
+    function handleSortFinalize(e: CustomEvent<DndEvent<DnDItem>>) {
+        const {
+            items: dndItems,
+            info: { id: elementId, trigger },
+        } = e.detail;
+        console.log(`finalize event => ${trigger.toUpperCase()} - ${elementId}`, $state.snapshot(dndItems));
+
+        if (virtualList === undefined) return;
+
+        if (wrongElementTakenIndex !== originalElementIndex) {
+            dndItems[originalElementIndex].id = originalElementId;
+        }
+
+        console.log('items', $state.snapshot(items));
+        console.log('dndItems', $state.snapshot(dndItems));
+
+        items = dndItems;
+    }
 
     function testClick() {
         if (virtualList === undefined) return;
@@ -114,7 +175,7 @@
     // overrideItemIdKeyNameBeforeInitialisingDndZones("index");
 </script>
 
-<section>
+<section class="">
     {items.length}
     <VirtualList
         bind:this={virtualList}
@@ -145,8 +206,8 @@
         getKey={(index) => items[index].id}
     >
         {#snippet theItem(style: string, index: number, key: number)}
-            <div {style}>
-                {items[index]?.name}-{index}-{key}
+            <div style="width: 100%;">
+                {items[index]?.name} - {index} - - {key}
             </div>
         {/snippet}
 
@@ -157,6 +218,15 @@
 		</div> -->
     </VirtualList>
     <button class="bg-neutral-500 p-2 cursor-pointer" onclick={testClick}> Test </button>
+
+    <section class="grid grid-cols-5">
+        <pre class="col-span-1 bg-black! text-white!" style="font-size:0.775rem">
+			{JSON.stringify(items, null, 2)}
+		</pre>
+        <pre class="col-span-4 bg-black! text-white!" style="font-size:0.775rem">
+			{JSON.stringify(virtualList?.getVirtualItems(), null, 2)}
+		</pre>
+    </section>
 </section>
 
 <style>
