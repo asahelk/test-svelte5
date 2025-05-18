@@ -341,7 +341,6 @@
 	}
 
 	export function getVirtualItems() {
-		console.log('VirtualList - getVirtualItems');
 		return items;
 	}
 	import { flip } from 'svelte/animate';
