@@ -1,26 +1,37 @@
-<script>
+<script lang="ts">
     import { dndzone } from 'svelte-dnd-action';
+    import type VirtualListType from './VirtualList3.svelte';
     import VirtualList from './VirtualList3.svelte';
     import { array } from '../virtuallist5/states.svelte';
+    import type { DndEvent } from 'svelte-dnd-action';
 
     // let items = $state(Array.from({length: 13}, (_, i) =>
     // 	({id:crypto.randomUUID(), name:`xitem ${i+1}`})))
 
-    let items = $state([...array.value]);
+    let virtualList = $state<ReturnType<typeof VirtualListType>>();
+
+    let items = $derived.by(() => {
+        // virtualList?.getVirtualItems();
+        return [...array.value];
+    });
+
+    type DnDItem = (typeof items)[number];
 
     let count = 0;
-    function handleSort(e) {
+    function handleSortConsider(e: CustomEvent<DndEvent<DnDItem>>) {
         // console.log("event", JSON.stringify(e.detail,null, 2))
-        console.log('event', e.detail);
+        const {
+            items: dndItems,
+            info: { id: elementIndex, trigger },
+        } = e.detail;
+        console.log(`consider event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(dndItems));
+
+        if (virtualList === undefined) return;
 
         // The problem here is that dnd grab the id by position of the VirtualList
         // e.g if is rendered from 10-20 and the grabbed item is 15 it returns the id of the item in index 5
 
         // const elementId = e.detail.info.id
-        const {
-            items: dndItems,
-            info: { id: fakeElementId, trigger },
-        } = e.detail;
 
         // use it to get the selected item in the VL
 
@@ -70,32 +81,33 @@
         const partialDndItems = dndItems.slice(start, stop + 1).map((e, i) => {
             return {
                 ...e,
-                index: vlItems[i].index,
-                style: vlItems[i].style,
+                index: vlItems?.[i].index,
+                style: vlItems?.[i].style,
             };
         });
 
-        console.log('partialDndItems', partialDndItems);
+        console.log('partialDndItems', $state.snapshot(partialDndItems));
         // console.log("dndItems",JSON.stringify(dndItems,null, 2))
         console.log('dndItems', $state.snapshot(dndItems));
 
-        virtualList.setVirtualItems(partialDndItems);
+        virtualList?.setVirtualItems(partialDndItems);
         items = dndItems;
         console.log('\n\n');
     }
 
-    let virtualList = $state();
+    function handleSortFinalize(e: CustomEvent<DndEvent<DnDItem>>) {}
 
     function testClick() {
+        if (virtualList === undefined) return;
         const { offset } = virtualList.getState();
         const { start, stop } = virtualList.getVisibleRange();
         console.log({ offset, start, stop });
     }
 
     function onscroll() {
-        // const {start, stop} = virtualList.getVisibleRange()
-        // virtualList.recomputeSizes(start)
-        // items = [...items];
+        items = [...items];
+        // const { start, stop } = virtualList.getVisibleRange();
+        // virtualList.recomputeSizes(start);
     }
 
     // 	import {overrideItemIdKeyNameBeforeInitialisingDndZones} from "svelte-dnd-action";
@@ -127,13 +139,13 @@
         itemCount={items.length}
         itemSize={32}
         overscanCount={0}
-        onconsider={handleSort}
-        onfinalize={handleSort}
+        onconsider={handleSortConsider}
+        onfinalize={handleSortFinalize}
         wrapperRestProps={{ onscroll }}
         getKey={(index) => items[index].id}
     >
-        {#snippet theItem(style, index, key)}
-            <div name="item" {style}>
+        {#snippet theItem(style: string, index: number, key: number)}
+            <div {style}>
                 {items[index]?.name}-{index}-{key}
             </div>
         {/snippet}
