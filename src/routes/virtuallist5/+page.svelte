@@ -38,9 +38,9 @@
 
 		console.log(`consider event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(partialDndItems));
 
-		indexGrabbed = +elementIndex;
 		if (virtualList === undefined) return;
 
+		indexGrabbed = +elementIndex;
 		const { start = 0, stop } = virtualList.getVisibleRange();
 
 		const { array: dndNoDuplicates } = mergeArrayObjectsByKeyWithMap(partialDndItems, 'index');
@@ -53,23 +53,7 @@
 			};
 		});
 
-		console.log('dndNoDuplicates', $state.snapshot(dndNoDuplicates));
-		console.log('getVirtualItems()', $state.snapshot(virtualList?.getVirtualItems()));
-		console.log('virtualListItems', $state.snapshot(virtualListItems));
-		console.log('partialDndItems', $state.snapshot(partialDndItems));
-		console.log('newDndItems', $state.snapshot(newDndItems));
-
-		// const oldPosition = +elementIndex;
-		// const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order;
-
-		// const elementToMove = items.splice(oldPosition, 1)[0];
-		// items = items.toSpliced(auxNewPosition, 0, elementToMove);
-		// const newElements = items.toSpliced(oldPosition, 1);
-		// console.log('newElements', $state.snapshot(newElements));
 		virtualList.setVirtualItems([...newDndItems]);
-		// virtualList.recomputeSizes(start);
-
-		console.log('\n\n');
 	}
 
 	function handleSortFinalize(e: CustomEvent<DndEvent<DnDItem>>) {
@@ -79,11 +63,10 @@
 		} = e.detail;
 		console.log(`finalize event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(partialDndItems));
 
-		indexGrabbed = -1;
 		if (virtualList === undefined) return;
-		const { start = 0, stop } = virtualList.getVisibleRange();
 
-		// console.log({start,stop})
+		indexGrabbed = -1;
+		const { start = 0 } = virtualList.getVisibleRange();
 
 		const newDndItems = partialDndItems.map((e, i) => {
 			return {
@@ -93,28 +76,15 @@
 			};
 		});
 
-		console.log('getVirtualItems()', $state.snapshot(virtualList?.getVirtualItems()));
-		console.log('virtualListItems', $state.snapshot(virtualListItems));
-		console.log('partialDndItems', $state.snapshot(partialDndItems));
-		console.log('newDndItems', $state.snapshot(newDndItems));
-
 		const oldPosition = +elementIndex;
 		const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order ?? -1;
 		// This ↓: Fix when dropping the item is sliding one position up when scrolling down because VL rerender the list
 		const newPosition = start - virtualListItems.length > oldPosition ? auxNewPosition - 1 : auxNewPosition;
 
-		// console.log('oldPosition', oldPosition);
-		// console.log('auxNewPosition', auxNewPosition);
-		// console.log('newPosition', newPosition);
-
-		// console.log("items bef",$state.snapshot(items))
-
 		const elementToMove = items.splice(oldPosition, 1)[0];
 		items = items.toSpliced(newPosition, 0, elementToMove);
 		virtualList.setVirtualItems(newDndItems);
 		virtualList.recomputeSizes(start);
-
-		console.log('\n\n');
 	}
 
 	function testClick() {
@@ -126,14 +96,6 @@
 		const { start, stop } = virtualList.getVisibleRange();
 		console.log({ offset, start, stop });
 	}
-
-	function onscroll() {
-		// const {start, stop} = virtualList.getVisibleRange()
-		// virtualList.recomputeSizes(start)
-		// items = [...items]
-	}
-
-	// let virtualListItems = $derived(virtualList?.getVirtualItems() ?? [])
 </script>
 
 <section class="flex flex-col">
@@ -164,7 +126,6 @@
 			overscanCount={0}
 			onconsider={handleSortConsider}
 			onfinalize={handleSortFinalize}
-			wrapperRestProps={{ onscroll }}
 			getKey={(index) => items[index]?.id}
 			class="inner-container"
 		>
@@ -174,16 +135,6 @@
 					-{index}--
 				</div>
 			{/snippet}
-
-			<!-- <div slot="item" let:index let:style {style}>
-				Letter: {items[index]}, Row: #{index}
-			</div> -->
-
-			<!-- getKey={(index) => items[index].id} -->
-
-			<!-- <div slot="item" let:index let:style {style}>
-			{index}-{style}
-		</div> -->
 		</VirtualList>
 	</div>
 	<button class="cursor-pointer bg-neutral-500 p-2" onclick={testClick}> Test </button>
