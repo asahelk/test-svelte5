@@ -4,8 +4,8 @@
 	import VirtualList from './VirtualList5.svelte';
 	import { overrideItemIdKeyNameBeforeInitialisingDndZones } from 'svelte-dnd-action';
 	import { mergeArrayObjectsByKeyWithMap } from '$lib/utils/utils';
-	// import { array } from './states.svelte.ts';
 
+	// This ↓: Fix is needed because if we use id, dnd change the id of the items when we drag it
 	overrideItemIdKeyNameBeforeInitialisingDndZones('index');
 
 	let virtualList = $state<ReturnType<typeof VirtualListType>>();
@@ -29,10 +29,8 @@
 	type DnDItem = (typeof virtualListItems)[number];
 
 	let itemSize = 50;
-	// let items = $state([...array.value])
 
 	function handleSortConsider(e: CustomEvent<DndEvent<DnDItem>>) {
-		// console.log("event", JSON.stringify(e.detail,null, 2))
 		const {
 			items: partialDndItems,
 			info: { id: elementIndex, trigger },
@@ -83,7 +81,6 @@
 
 		indexGrabbed = -1;
 		if (virtualList === undefined) return;
-		const { offset } = virtualList.getState();
 		const { start = 0, stop } = virtualList.getVisibleRange();
 
 		// console.log({start,stop})
@@ -96,24 +93,24 @@
 			};
 		});
 
-		// console.log("getVirtualItems()",$state.snapshot(virtualList?.getVirtualItems()))
-		// console.log("virtualListItems",$state.snapshot(virtualListItems))
-		// console.log("partialDndItems",$state.snapshot(partialDndItems))
-		// console.log("newDndItems",$state.snapshot(newDndItems))
-
-		//TODO: Fix when dropping the item is sliding one position up
+		console.log('getVirtualItems()', $state.snapshot(virtualList?.getVirtualItems()));
+		console.log('virtualListItems', $state.snapshot(virtualListItems));
+		console.log('partialDndItems', $state.snapshot(partialDndItems));
+		console.log('newDndItems', $state.snapshot(newDndItems));
 
 		const oldPosition = +elementIndex;
-		const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order;
-		// const newPosition = newDndItems[auxNewPosition - 1]?.order ?? 0;
-		// console.log("oldPosition",oldPosition)
-		// console.log("auxNewPosition",auxNewPosition)
-		// console.log("newPosition",newPosition)
+		const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order ?? -1;
+		// This ↓: Fix when dropping the item is sliding one position up when scrolling down because VL rerender the list
+		const newPosition = start - virtualListItems.length > oldPosition ? auxNewPosition - 1 : auxNewPosition;
+
+		// console.log('oldPosition', oldPosition);
+		// console.log('auxNewPosition', auxNewPosition);
+		// console.log('newPosition', newPosition);
 
 		// console.log("items bef",$state.snapshot(items))
 
 		const elementToMove = items.splice(oldPosition, 1)[0];
-		items = items.toSpliced(auxNewPosition, 0, elementToMove);
+		items = items.toSpliced(newPosition, 0, elementToMove);
 		virtualList.setVirtualItems(newDndItems);
 		virtualList.recomputeSizes(start);
 
@@ -219,7 +216,7 @@
 	}
 
 	:global(.inner-container) {
-		margin: 24px 0;
+		/* margin: 24px 0; */
 		/* margin-bottom: 2rem; */
 	}
 </style>
