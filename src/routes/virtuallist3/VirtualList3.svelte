@@ -53,7 +53,7 @@
     export let use: ActionArray | undefined = [];
     export let header: Snippet;
     export let footer: Snippet;
-    export let theItem: Snippet<[style: string, index: number]>;
+    export let theItem: Snippet<[style: string, index: number, key: number]>;
 
     const dispatchEvent = createEventDispatcher();
 
