@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Child from '$lib/components/Simple/Child.svelte';
-	import VirtualList from '$lib/components/SimpleVirtualList/VirtualList.svelte';
+	import Child from "$lib/components/Simple/Child.svelte";
+	import VirtualList from "$lib/components/SimpleVirtualList/SimpleVirtualList.svelte";
 
 	let items = $state(Array.from({ length: 20 }, (_, i) => ({ name: i + 1, isVisible: false })));
 

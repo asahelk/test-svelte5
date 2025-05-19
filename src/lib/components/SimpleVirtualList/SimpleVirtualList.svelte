@@ -1,5 +1,6 @@
-<script lang="ts" generics="T extends { isVisible: boolean }">
-	import type { Snippet } from 'svelte';
+<script lang="ts" generics="T extends { isVisible?: boolean }">
+	import type { Snippet } from "svelte";
+	import { useActions, type ActionArray } from "../../../routes/virtuallist5/useActions";
 
 	interface Props {
 		items: T[];
@@ -8,16 +9,17 @@
 		width: number;
 		height?: number;
 		getKey?: (index: number) => unknown;
+		use?: ActionArray | undefined;
 	}
 
-	let { items = $bindable(), renderItem, itemSize, width, height, getKey }: Props = $props();
+	let { items = $bindable(), renderItem, itemSize, width, height, getKey, use = [], ...rest }: Props = $props();
 
 	let scrollLeft = $state(0);
 
 	function onScroll(
 		event: UIEvent & {
 			currentTarget: EventTarget & HTMLElement;
-		}
+		},
 	) {
 		scrollLeft = event.currentTarget.scrollLeft;
 		rerender();
@@ -39,20 +41,22 @@
 			const item = items[firstIndex + i];
 			if (item) item.isVisible = true;
 		}
+		items = items;
 	}
 
 	rerender();
+
+	//TODO: pass length, and create a new array with the length with isVisible
+	// in Svelte svelte@5.29.0 they introduced the attachments, useful to manage use:actions
+	// https://github.com/sveltejs/svelte/pull/15000 - width this useActions file is not longer needed
 </script>
 
-{scrollLeft}
-<section
-	class="container-wrapper overflow-x-auto"
-	onscroll={onScroll}
-	style="width: {width}px;height: {height}px;"
->
+<section class="container-wrapper" onscroll={onScroll} style="width: {width}px; height: 100%;">
 	<div
 		class="container-inner"
-		style="grid-template-columns: repeat({items.length},1fr); width: {itemSize * items.length}px;"
+		style="grid-template-columns: repeat({items.length},1fr); width: {itemSize * items.length}px; min-height: 100%;"
+		use:useActions={use}
+		{...rest}
 	>
 		{#each items as item, index (getKey ? getKey(index) : index)}
 			{#if item?.isVisible}
@@ -65,6 +69,12 @@
 </section>
 
 <style>
+	.container-wrapper {
+		overflow: auto;
+		/* overflow-y: hidden; */
+		will-change: transform;
+		-webkit-overflow-scrolling: touch;
+	}
 	.container-inner {
 		transition: transform 0.3s ease-in-out;
 		display: grid;
