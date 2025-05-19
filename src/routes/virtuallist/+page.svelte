@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Child from "$lib/components/Simple/Child.svelte";
-	import VirtualList from "$lib/components/SimpleVirtualList/SimpleVirtualList.svelte";
+	import SimpleVirtualList from "$lib/components/SimpleVirtualList/SimpleVirtualList.svelte";
 
 	let items = $state(Array.from({ length: 20 }, (_, i) => ({ name: i + 1, isVisible: false })));
 
@@ -11,11 +11,11 @@
 </script>
 
 <div class="flex flex-col gap-10">
-	<VirtualList {items} itemSize={100} width={400} height={100}>
+	<SimpleVirtualList {items} itemSize={100} width={400} height={100}>
 		{#snippet renderItem(index)}
 			<Child item={items[index]} />
 		{/snippet}
-	</VirtualList>
+	</SimpleVirtualList>
 
 	<button onclick={changeItems}>Change items</button>
 </div>
