@@ -5,15 +5,16 @@
 	import { overrideItemIdKeyNameBeforeInitialisingDndZones } from 'svelte-dnd-action';
 	import { mergeArrayObjectsByKeyWithMap } from '$lib/utils/utils';
 	import SimpleVirtualList from '$lib/components/SimpleVirtualList/SimpleVirtualList.svelte';
+	import { DIRECTION } from './constants';
 
 	// TODO: This ↓ is needed because if we use id, dnd change the id of the items when we drag it (with VirtualList5)
 	overrideItemIdKeyNameBeforeInitialisingDndZones('index');
 
 	let virtualList = $state<ReturnType<typeof VirtualListType>>();
 
-	let virtualListItems = $derived(
+	let virtualListItems: DnDVLItem[] = $derived(
 		virtualList?.getVirtualItems().map((e, i) => {
-			if (virtualList === undefined) return e;
+			if (virtualList === undefined) return { ...e, order: 0, style: '', index: 0 };
 			const { start = 0 } = virtualList.getVisibleRange();
 			return {
 				...e,
@@ -30,7 +31,13 @@
 	type DnDItem = (typeof virtualListItems)[number];
 	type DnDItem2 = (typeof items)[number];
 
-	let itemSize = 50;
+	type DnDVLItem = {
+		order: number;
+		style: string;
+		index: number;
+	};
+
+	let itemSize = 100;
 
 	function handleSortConsider(e: CustomEvent<DndEvent<DnDItem>>) {
 		const {
@@ -51,10 +58,15 @@
 		const { array: dndNoDuplicates } = mergeArrayObjectsByKeyWithMap(partialDndItems, 'index');
 
 		const newDndItems = dndNoDuplicates.map((e, i) => {
+			// top: 0px; width: 50px; position: absolute; height: 100%; left: 250px; user-select: none; cursor: grab;
+			let style =
+				scrollDirection === DIRECTION.VERTICAL
+					? `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`
+					: `top: 0px; width: ${itemSize}px; position: absolute; height: 100%; left: ${(start + i) * itemSize}px;`;
 			return {
 				...e,
 				order: start + i,
-				style: `left:0;width:100%;height:${itemSize}px;position:absolute;top:${(start + i) * itemSize}px;'`,
+				style,
 			};
 		});
 
@@ -138,6 +150,8 @@
 		console.log(`consider event => ${trigger.toUpperCase()} - ${id}`, $state.snapshot(dndItems));
 		items = dndItems;
 	}
+
+	let scrollDirection = DIRECTION.HORIZONTAL;
 </script>
 
 <section class="flex flex-col">
@@ -166,9 +180,10 @@
 		<VirtualList
 			bind:this={virtualList}
 			use={[[dndzone, dndOptionsVL]]}
-			width="100%"
+			width={600}
 			height={300}
 			itemCount={items.length}
+			{scrollDirection}
 			{itemSize}
 			overscanCount={0}
 			onconsider={handleSortConsider}
