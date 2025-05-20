@@ -4,8 +4,9 @@
 	import VirtualList from './VirtualList5.svelte';
 	import { overrideItemIdKeyNameBeforeInitialisingDndZones } from 'svelte-dnd-action';
 	import { mergeArrayObjectsByKeyWithMap } from '$lib/utils/utils';
+	import SimpleVirtualList from '$lib/components/SimpleVirtualList/SimpleVirtualList.svelte';
 
-	// This ↓: Fix is needed because if we use id, dnd change the id of the items when we drag it
+	// TODO: This ↓ is needed because if we use id, dnd change the id of the items when we drag it (with VirtualList5)
 	overrideItemIdKeyNameBeforeInitialisingDndZones('index');
 
 	let virtualList = $state<ReturnType<typeof VirtualListType>>();
@@ -25,8 +26,9 @@
 
 	let indexGrabbed = $state(-1);
 
-	let items = $state(Array.from({ length: 17 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}` })));
+	let items = $state(Array.from({ length: 17 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}`, isVisible: false })));
 	type DnDItem = (typeof virtualListItems)[number];
+	type DnDItem2 = (typeof items)[number];
 
 	let itemSize = 50;
 
@@ -96,11 +98,52 @@
 		const { start, stop } = virtualList.getVisibleRange();
 		console.log({ offset, start, stop });
 	}
+
+	let dndOptions = $derived({
+		items: items,
+		flipDurationMs: 200,
+		// dropTargetClasses: ['!outline-teal-500', '!outline-dashed'],
+		dropTargetStyle: {
+			outline: '1px dashed rgb(13 148 136)',
+		},
+		type: 'columns',
+		autoAriaDisabled: true,
+	});
+
+	function handleSortConsider2(e: CustomEvent<DndEvent<DnDItem2>>) {
+		const {
+			items: dndItems,
+			info: { id, trigger },
+		} = e.detail;
+
+		console.log(`consider event => ${trigger.toUpperCase()} - ${id}`, $state.snapshot(dndItems));
+		items = dndItems;
+	}
 </script>
 
 <section class="flex flex-col">
 	{items.length}-{virtualListItems?.length}
 	<div>
+		<!-- <SimpleVirtualList
+			bind:items
+			itemSize={140}
+			height={600}
+			width={600}
+			use={[[dndzone, dndOptions]]}
+			onconsider={handleSortConsider2}
+			onfinalize={handleSortConsider2}
+			getKey={(index) => items[index]?.id}
+			scrollDirection="horizontal"
+			class="grid gap-10 w-full"
+		>
+			{#snippet renderItem(index: number)}
+				{@const dndItem = items[index]}
+				<div class="w-full h-full" style="width: 100%;">
+					{items[index]?.name}
+					-{index}--
+				</div>
+			{/snippet}
+		</SimpleVirtualList> -->
 		<VirtualList
 			bind:this={virtualList}
 			use={[
@@ -160,10 +203,10 @@
 		/* height: 600px; */
 	}
 	div {
-		width: 70%;
-		padding: 0.2em;
-		border: 1px solid blue;
-		margin: 0.15em 0;
+		/* width: 70%; */
+		/* padding: 0.2em; */
+		/* border: 1px solid blue; */
+		/* margin: 0.15em 0; */
 	}
 
 	:global(.inner-container) {
