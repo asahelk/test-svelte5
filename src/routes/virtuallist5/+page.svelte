@@ -24,7 +24,7 @@
 		}) ?? [],
 	);
 
-	let indexGrabbed = $state(-1);
+	let indexGrabbed = $state(-1); // wildcard only for styles bc when using VL, internal items rerender and the element grabbed also appears in the list
 
 	let items = $state(Array.from({ length: 17 }, (_, i) => ({ id: crypto.randomUUID(), name: `xitem ${i}`, isVisible: false })));
 	type DnDItem = (typeof virtualListItems)[number];
@@ -39,10 +39,13 @@
 		} = e.detail;
 
 		console.log(`consider event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(partialDndItems));
+		handleDnDConsiderVirtualItems(partialDndItems, Number(elementIndex));
+	}
 
+	function handleDnDConsiderVirtualItems(partialDndItems: DnDItem[], elementIndex: number) {
 		if (virtualList === undefined) return;
+		indexGrabbed = elementIndex;
 
-		indexGrabbed = +elementIndex;
 		const { start = 0, stop } = virtualList.getVisibleRange();
 
 		const { array: dndNoDuplicates } = mergeArrayObjectsByKeyWithMap(partialDndItems, 'index');
@@ -65,9 +68,14 @@
 		} = e.detail;
 		console.log(`finalize event => ${trigger.toUpperCase()} - ${elementIndex}`, $state.snapshot(partialDndItems));
 
+		handleDnDFinalizeVirtualItems(partialDndItems, Number(elementIndex));
+	}
+
+	function handleDnDFinalizeVirtualItems(partialDndItems: DnDItem[], elementIndex: number) {
+		indexGrabbed = -1;
+
 		if (virtualList === undefined) return;
 
-		indexGrabbed = -1;
 		const { start = 0 } = virtualList.getVisibleRange();
 
 		const newDndItems = partialDndItems.map((e, i) => {
@@ -80,7 +88,7 @@
 
 		const oldPosition = +elementIndex;
 		const auxNewPosition = newDndItems.find((e) => e.index === oldPosition)?.order ?? -1;
-		// This ↓: Fix when dropping the item is sliding one position up when scrolling down because VL rerender the list
+		// This ↓: This stop that the item slides one position up when scrolling down because VL rerender the list
 		const newPosition = start - virtualListItems.length > oldPosition ? auxNewPosition - 1 : auxNewPosition;
 
 		const elementToMove = items.splice(oldPosition, 1)[0];
@@ -99,8 +107,19 @@
 		console.log({ offset, start, stop });
 	}
 
-	let dndOptions = $derived({
+	let dndOptionsSimple = $derived({
 		items: items,
+		flipDurationMs: 200,
+		// dropTargetClasses: ['!outline-teal-500', '!outline-dashed'],
+		dropTargetStyle: {
+			outline: '1px dashed rgb(13 148 136)',
+		},
+		type: 'columns',
+		autoAriaDisabled: true,
+	});
+
+	let dndOptionsVL = $derived({
+		items: virtualListItems,
 		flipDurationMs: 200,
 		// dropTargetClasses: ['!outline-teal-500', '!outline-dashed'],
 		dropTargetStyle: {
@@ -146,22 +165,7 @@
 		</SimpleVirtualList> -->
 		<VirtualList
 			bind:this={virtualList}
-			use={[
-				[
-					dndzone,
-					{
-						items: virtualListItems,
-						flipDurationMs: 200,
-						// dropTargetClasses: ['!outline-teal-500', '!outline-dashed'],
-						dropTargetStyle: {
-							outline: '1px dashed rgb(13 148 136)',
-						},
-						type: 'columns',
-						dragDisabled: false,
-						autoAriaDisabled: true,
-					},
-				],
-			]}
+			use={[[dndzone, dndOptionsVL]]}
 			width="100%"
 			height={300}
 			itemCount={items.length}
