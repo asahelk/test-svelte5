@@ -56,3 +56,27 @@ export const array = {
         }
     ]
 }
+
+export interface ContainerFeedItemUI {
+    id: string;
+    name: string;
+    isDndShadowItem?: boolean;
+    isGlobal: boolean;
+    position: number;
+    state?: string;
+}
+
+//Generate data with the ContainerFeedItemUI interface
+export const generateData = (): ContainerFeedItemUI[] => {
+    const data: ContainerFeedItemUI[] = [];
+    for (let i = 0; i < array.value.length; i++) {
+        data.push({
+            id: array.value[i].id,
+            name: array.value[i].name,
+            isGlobal: false,
+            position: i,
+            state: 'enabled'
+        })
+    }
+    return data
+}
