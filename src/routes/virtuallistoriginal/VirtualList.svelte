@@ -45,6 +45,9 @@
     export let scrollToIndex = null;
     export let scrollToAlignment = null;
     export let scrollToBehaviour = 'instant';
+    export let theItem = undefined;
+    export let header = undefined;
+    export let footer = undefined;
 
     export let overscanCount = 3;
 
@@ -310,15 +313,27 @@
 </script>
 
 <div bind:this={wrapper} class="virtual-list-wrapper" style={wrapperStyle}>
-    <slot name="header" />
+    <!-- <slot name="header" /> -->
+    {#if header}
+        {@render header?.()}
+    {/if}
 
     <div class="virtual-list-inner" style={innerStyle}>
         {#each items as item (getKey ? getKey(item.index) : item.index)}
-            <slot name="item" style={item.style} index={item.index} />
+            <!-- <slot name="item" style={item.style} index={item.index} /> -->
+
+            <!-- {#if theItem} -->
+            <div class="virtual-item" style={item.style}>
+                {@render theItem?.(item.index, item.style)}
+            </div>
+            <!-- {/if} -->
         {/each}
     </div>
 
-    <slot name="footer" />
+    <!-- <slot name="footer" /> -->
+    {#if footer}
+        {@render footer?.()}
+    {/if}
 </div>
 
 <style>

@@ -97,7 +97,7 @@
 
 <div bind:this={container} style={containerStyle} onscroll={handleScroll} class="virtual-list-container">
     <div style={innerStyle} class="virtual-list-inner">
-        {#each visibleItems as item, index (getKey ? getKey(item.index) : item.index)}
+        {#each visibleItems as item, index (getKey ? getKey(item.index) : index)}
             <!-- {@const offset = (startIndex + index) * itemSize} -->
             <!-- {@const style = `position:absolute;${scrollDirection === DIRECTION.VERTICAL ? `top:${offset}px;width: 100%;` : `left:${offset}px;height: 100%;`} `} -->
             <!-- <div class="virtual-item" style="position: absolute; top: {(startIndex + index) * itemSize}px; height: {itemSize}px; width: 100%;"> -->
