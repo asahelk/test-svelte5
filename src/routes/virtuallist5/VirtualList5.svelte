@@ -11,12 +11,14 @@
 		try {
 			const arg = Object.defineProperty({}, 'passive', {
 				get() {
+					// @ts-ignore
 					result = { passive: true };
 					return true;
 				},
 			});
-
+			// @ts-ignore
 			window.addEventListener('testpassive', arg, arg);
+			// @ts-ignore
 			window.remove('testpassive', arg, arg);
 		} catch (e) {
 			/* */
@@ -28,10 +30,12 @@
 
 <script lang="ts">
 	import { onMount, onDestroy, createEventDispatcher, type Snippet } from 'svelte';
-	import SizeAndPositionManager from './SizeAndPositionManager';
-	import { DIRECTION, SCROLL_CHANGE_REASON, SCROLL_PROP, SCROLL_PROP_LEGACY } from './constants';
+
+	import { DIRECTION, SCROLL_CHANGE_REASON, SCROLL_PROP, SCROLL_PROP_LEGACY, type Direction } from './constants';
+
+	import SizeAndPositionManager, { type Alignment } from './SizeAndPositionManager';
+	import { flip } from 'svelte/animate';
 	import { useActions, type ActionArray } from './useActions';
-	import type { Item, Options } from 'svelte-dnd-action';
 
 	export let height: number | string;
 	export let width: number | string | undefined = '100%';
@@ -42,17 +46,17 @@
 	export let stickyIndices: number[] | null | undefined = null;
 	export let getKey: ((index: number) => any) | null | undefined = null;
 
-	export let scrollDirection: typeof DIRECTION.VERTICAL | typeof DIRECTION.HORIZONTAL = DIRECTION.VERTICAL;
-	export let scrollOffset: number | null | undefined = null;
-	export let scrollToIndex: number | null | undefined = null;
-	export let scrollToAlignment: string | null | undefined = null;
-	export let scrollToBehaviour: string | undefined = 'instant';
+	export let scrollDirection: Direction = DIRECTION.VERTICAL;
+	export let scrollOffset: number | undefined = undefined;
+	export let scrollToIndex: number | undefined = undefined;
+	export let scrollToAlignment: Alignment | undefined = undefined;
+	export let scrollToBehaviour: ScrollBehavior = 'instant';
 
 	export let overscanCount: number = 3;
-	export let use: ActionArray | undefined = [];
-	export let header: Snippet;
-	export let footer: Snippet;
-	export let theItem: Snippet<[style: string, index: number, key: number]>;
+	export let use: ActionArray = [];
+	export let header: Snippet | undefined = undefined;
+	export let footer: Snippet | undefined = undefined;
+	export let theItem: Snippet<[style: string, index: number]>;
 
 	const dispatchEvent = createEventDispatcher();
 
@@ -64,10 +68,10 @@
 
 	let mounted = false;
 	let wrapper: HTMLDivElement | undefined;
-	let items: { index: number; style: any }[] = [];
+	let items: { index: number; style: string }[] = [];
 
 	let _state: {
-		offset: number | null | undefined;
+		offset: number | undefined;
 		scrollChangeReason: typeof SCROLL_CHANGE_REASON.REQUESTED | typeof SCROLL_CHANGE_REASON.OBSERVED;
 	} = {
 		offset: scrollOffset || (scrollToIndex != null && items.length && getOffsetForIndex(scrollToIndex)) || 0,
@@ -175,7 +179,7 @@
 			refresh();
 		}
 
-		if (prevState.offset !== offset && scrollChangeReason === SCROLL_CHANGE_REASON.REQUESTED) {
+		if (prevState.offset !== offset && scrollChangeReason === SCROLL_CHANGE_REASON.REQUESTED && typeof offset === 'number') {
 			scrollTo(offset);
 		}
 
@@ -211,8 +215,8 @@
 		}
 
 		const { start, stop } = sizeAndPositionManager.getVisibleRange({
-			containerSize: scrollDirection === DIRECTION.VERTICAL ? height : width,
-			offset,
+			containerSize: scrollDirection === DIRECTION.VERTICAL ? Number(height) : Number(width),
+			offset: Number(offset),
 			overscanCount,
 		});
 
@@ -240,13 +244,14 @@
 	}
 
 	function scrollTo(value: number) {
+		if (wrapper == null) return;
 		if ('scroll' in wrapper) {
 			wrapper.scroll({
 				[SCROLL_PROP[scrollDirection]]: value,
 				behavior: scrollToBehaviour,
 			});
 		} else {
-			wrapper[SCROLL_PROP_LEGACY[scrollDirection]] = value;
+			(wrapper as HTMLDivElement)[SCROLL_PROP_LEGACY[scrollDirection]] = value;
 		}
 	}
 
@@ -263,14 +268,14 @@
 
 		return sizeAndPositionManager.getUpdatedOffsetForIndex({
 			align,
-			containerSize: scrollDirection === DIRECTION.VERTICAL ? height : width,
+			containerSize: scrollDirection === DIRECTION.VERTICAL ? Number(height) : Number(width),
 			currentOffset: _state.offset || 0,
 			targetIndex: index,
 		});
 	}
 
 	function handleScroll(event: Event) {
-		const offset = getWrapperOffset();
+		const offset = getWrapperOffset() ?? 0;
 
 		if (offset < 0 || _state.offset === offset || event.target !== wrapper) return;
 
@@ -286,7 +291,7 @@
 	}
 
 	function getWrapperOffset() {
-		return wrapper[SCROLL_PROP_LEGACY[scrollDirection]];
+		return wrapper?.[SCROLL_PROP_LEGACY[scrollDirection]];
 	}
 
 	function getEstimatedItemSize() {
@@ -321,42 +326,35 @@
 		return (styleCache[index] = style);
 	}
 
-	export function getState() {
-		return _state;
-	}
-
-	export let wrapperRestProps;
-
 	export function getVisibleRange() {
 		const { offset } = _state;
 		return sizeAndPositionManager.getVisibleRange({
-			containerSize: scrollDirection === DIRECTION.VERTICAL ? height : width,
-			offset,
+			containerSize: scrollDirection === DIRECTION.VERTICAL ? Number(height) : Number(width),
+			offset: Number(offset),
 			overscanCount,
 		});
 	}
 
-	export function setVirtualItems(newItems) {
+	export function setVirtualItems(newItems: { index: number; style: string }[]) {
 		items = newItems;
 	}
 
-	export function getVirtualItems() {
+	export function getVirtualItems(): { index: number; style: string }[] {
 		return items;
 	}
-	import { flip } from 'svelte/animate';
 </script>
 
-<div bind:this={wrapper} class="virtual-list-wrapper" style={wrapperStyle} {...wrapperRestProps}>
+<div bind:this={wrapper} class="virtual-list-wrapper" style={wrapperStyle}>
 	{#if header}
 		{@render header?.()}
 	{/if}
 
 	<div class="virtual-list-inner" style={innerStyle} use:useActions={use} {...$$restProps}>
 		{#each items as item (getKey ? getKey(item.index) : item.index)}
-			<div animate:flip={{ duration: 200 }} style={item.style}>
-				{@render theItem?.(item.style, item.index, getKey?.(item.index))}
-			</div>
 			<!-- <slot name="item" style={item.style} index={item.index} /> -->
+			<div animate:flip={{ duration: 200 }} style="{item.style}; border: red solid 1px">
+				{@render theItem?.(item.style, item.index)}
+			</div>
 		{/each}
 	</div>
 
