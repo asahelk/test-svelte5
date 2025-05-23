@@ -6,17 +6,17 @@
 </script>
 
 <div class="app">
-	<Header />
+	<!-- <Header /> -->
 
 	<main>
 		{@render children()}
 	</main>
-
+	<!-- 
 	<footer>
 		<p>
 			visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to learn about SvelteKit
 		</p>
-	</footer>
+	</footer> -->
 </div>
 
 <style>
@@ -32,7 +32,7 @@
 		flex-direction: column;
 		padding: 1rem;
 		width: 100%;
-		max-width: 64rem;
+		max-width: 130rem;
 		margin: 0 auto;
 		box-sizing: border-box;
 	}
