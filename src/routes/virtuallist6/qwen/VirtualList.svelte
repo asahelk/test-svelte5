@@ -1,16 +1,36 @@
 <script lang="ts" generics="T extends {id:string}">
-    import { onMount } from 'svelte';
+    import { onMount, type Component, type Snippet } from 'svelte';
     import { createObserver } from './utils';
     import { SvelteSet } from 'svelte/reactivity';
+    import type { HTMLAttributes } from 'svelte/elements';
+    import type { DndEvent } from 'svelte-dnd-action';
+    import type { ActionArray } from '../../virtuallist5/useActions';
 
-    export let items: T[] = [];
+    type Props = {
+        items: T[];
+        itemsCount: number;
+        itemSize?: number;
+        height?: number;
+        width?: number;
+        use?: ActionArray;
+        scrollDirection?: string;
+        gap?: number;
+        ItemComponent?: Component; // Constructor of a Svelte component
+        PlaceholderComponent?: Component | null;
+        containerClass?: string;
+        animationDuration?: number;
+        getKey?: (index: number) => string | number;
+        renderItem: Snippet<[T, number]>;
+        onconsider?: (e: CustomEvent<DndEvent<T>>) => void;
+        onfinalize?: (e: CustomEvent<DndEvent<T>>) => void;
+    } & HTMLAttributes<HTMLDivElement>;
 
-    export let itemHeight = 50;
-    export let threshold = 0.1;
+    let { items, itemSize = 0, renderItem }: Props = $props();
+
+    let threshold = 0.1;
 
     let container: HTMLElement | null = null;
     const visibleIndices = new SvelteSet<number>();
-    // let visibleItems: number[] = [];
 
     onMount(() => {
         if (!container) return;
@@ -21,34 +41,19 @@
                 const index = Number((entry.target as HTMLElement).dataset.index);
                 if (entry.isIntersecting) {
                     visibleIndices.add(index);
-                    // visibleItems = [...visibleItems, index];
                 } else {
                     visibleIndices.delete(index);
-                    // visibleItems = visibleItems.filter((i) => i !== index);
                 }
             }
-            // entries.forEach((entry) => {
-            //     const index = Number(entry.target.dataset.index);
-            //     if (entry.isIntersecting) {
-            //         visibleItems = [...visibleItems, index];
-            //     } else {
-            //         visibleItems = visibleItems.filter((i) => i !== index);
-            //     }
-            // });
         }, threshold);
 
         for (let i = 0; i < container.children.length; i++) {
             const child = container.children[i];
-            console.log('child:', child);
             observer.observe(child);
         }
-        // Array.from(container.children).forEach((child) => {
-        //     observer.observe(child);
-        // });
 
         return () => {
             visibleIndices.clear();
-            // visibleItems = [];
             observer.disconnect();
         };
     });
@@ -56,9 +61,9 @@
 
 <div class="virtual-list" bind:this={container}>
     {#each items as item, i}
-        <div class="item-wrapper bg-teal-500" data-index={i} style="top: {i * itemHeight}px;height:{itemHeight}px;">
+        <div class="item-wrapper bg-teal-500" data-index={i} style="top: {i * itemSize}px;height:{itemSize}px;">
             {#if visibleIndices.has(i)}
-                {item.id}
+                {@render renderItem?.(item, i)}
             {/if}
         </div>
     {/each}

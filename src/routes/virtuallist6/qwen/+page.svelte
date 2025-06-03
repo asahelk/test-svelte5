@@ -7,7 +7,11 @@
             text: `This is item number ${i}`,
         })),
     );
-    let itemHeight = $state(50);
+    let itemSize = $state(50);
 </script>
 
-<VirtualList {items} {itemHeight}></VirtualList>
+<VirtualList {items} {itemSize}>
+    {#snippet renderItem(item, index)}
+        {item.id}
+    {/snippet}
+</VirtualList>
