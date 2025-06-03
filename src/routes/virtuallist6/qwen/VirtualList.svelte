@@ -25,15 +25,19 @@
         onfinalize?: (e: CustomEvent<DndEvent<T>>) => void;
     } & HTMLAttributes<HTMLDivElement>;
 
-    let { items, itemSize = 0, renderItem }: Props = $props();
+    let { items, itemSize = 0, height, width, renderItem }: Props = $props();
 
     let threshold = 0.1;
 
-    let container: HTMLElement | null = null;
+    let _$container: HTMLElement | null = null;
     const visibleIndices = new SvelteSet<number>();
 
+    const heightUnit = typeof height === 'number' ? 'px' : '';
+    const widthUnit = typeof width === 'number' ? 'px' : '';
+    let containerStyle = $derived(`height:${height}${heightUnit};width:${width}${widthUnit};`);
+
     onMount(() => {
-        if (!container) return;
+        if (!_$container) return;
 
         const observer = createObserver((entries) => {
             console.log(entries);
@@ -47,8 +51,8 @@
             }
         }, threshold);
 
-        for (let i = 0; i < container.children.length; i++) {
-            const child = container.children[i];
+        for (let i = 0; i < _$container.children.length; i++) {
+            const child = _$container.children[i];
             observer.observe(child);
         }
 
@@ -59,29 +63,20 @@
     });
 </script>
 
-<div class="virtual-list" bind:this={container}>
-    {#each items as item, i}
-        <div class="item-wrapper bg-teal-500" data-index={i} style="top: {i * itemSize}px;height:{itemSize}px;">
-            {#if visibleIndices.has(i)}
-                {@render renderItem?.(item, i)}
+<div bind:this={_$container} class="virtual-list-container" style={containerStyle}>
+    {#each items as item, index (item.id)}
+        <div class="virtual-list-item-wrapper" data-index={index} style="top: {index * itemSize}px;height:{itemSize}px;">
+            {#if visibleIndices.has(index)}
+                {@render renderItem?.(item, index)}
             {/if}
         </div>
     {/each}
 </div>
 
 <style>
-    .virtual-list {
-        position: relative;
-        height: 500px;
-        overflow-y: auto;
-    }
-
-    .item-wrapper {
-        /* height: ; */
-        position: absolute;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .virtual-list-container {
+        overflow: auto;
+        will-change: transform;
+        -webkit-overflow-scrolling: touch;
     }
 </style>
