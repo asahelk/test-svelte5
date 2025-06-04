@@ -114,7 +114,6 @@
 <div bind:this={_$container} class="virtual-list-container" style={containerStyle}>
     <div bind:this={_$inner} class="virtual-list-inner" style={innerStyle} use:useActions={use} {...props}>
         {#each items as item, index (item.id)}
-            <!-- <div class="virtual-list-item-wrapper" data-index={index} style="height:{itemSize}px;min-width:{itemSize}px;"> -->
             <div class="virtual-list-item-wrapper" data-index={index} style={getStyle(index)}>
                 {#if visibleIndices.has(index)}
                     {@render renderItem?.(item, index)}

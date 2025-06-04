@@ -2,7 +2,7 @@
     import { DIRECTION } from '$lib/components/VirtualList/constants';
     import VirtualList from './VirtualList.svelte';
 
-    const length = 3;
+    const length = 1000;
     let items = $state(
         Array.from({ length }, (_, i) => ({
             id: `item-${i}`,
@@ -10,23 +10,22 @@
         })),
     );
     let itemSize = $state(50);
-    let itemSizes = $state(Array.from({ length }, (_, i) => 10));
+    let itemSizes = $state(Array.from({ length }, (_, i) => 24));
 
-    function getTotalSize(array: number[]) {
-        if (Array.isArray(array)) {
-            return array.reduce((acc, size) => acc + size, 0);
+    function getTotalSize(itemSize: number | number[], itemsCount: number, gap: number) {
+        if (Array.isArray(itemSize)) {
+            return itemSize.reduce((acc, size) => acc + size + gap, -gap);
         }
 
-        return 0;
-        // return itemSize * itemsCount;
+        return (itemSize + gap) * itemsCount - gap;
     }
 </script>
 
 <!-- {itemSizes} -->
 {JSON.stringify(itemSizes, null, 2)}
-{getTotalSize(itemSizes)}
+{getTotalSize(itemSize, length, 14)}
 <div class="h-screen">
-    <VirtualList {items} {itemSize} itemsCount={length} width={500} scrollDirection={DIRECTION.VERTICAL} gap={14}>
+    <VirtualList {items} {itemSize} itemsCount={length} width={700} height={500} scrollDirection={DIRECTION.VERTICAL} gap={14}>
         {#snippet renderItem(item, index)}
             <div bind:clientHeight={itemSizes[index]} class="h-full bg-red-500">
                 <div class="bg-teal-500">{item.id}</div>
