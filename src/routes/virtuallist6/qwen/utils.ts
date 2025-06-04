@@ -13,3 +13,17 @@ export function createObserver({
 
     return new IntersectionObserver(callback, options);
 }
+
+export function createObserver2(
+    callback: IntersectionObserverCallback,
+    threshold: number,
+    rootMargin = '0px'
+): IntersectionObserver {
+    const options: IntersectionObserverInit = {
+        root: null, // viewport
+        rootMargin,
+        threshold
+    };
+
+    return new IntersectionObserver(callback, options);
+}
